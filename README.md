@@ -98,3 +98,23 @@ npm run dev
 cd frontend-react
 npm install
 npm run dev
+
+# backend-python — LogiCycle Priority Engine
+
+Flask service that scores drainage hazards and verifies photo authenticity.
+
+## What It Does
+
+1. **`/score`** — Computes a Priority Score from `material × density`.
+2. **`/verify-image`** — Checks EXIF capture time against server arrival time.
+3. **`/health`** — Liveness probe (used by Render cold-start warmup).
+4. **`/score/matrix`** — Returns the scoring formula as JSON (read-only, for admin UI).
+
+## Run Locally
+
+```bash
+cd backend-python
+python -m venv venv
+source venv/Scripts/activate   # Windows Git Bash
+pip install -r requirements.txt
+python app.py
