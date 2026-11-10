@@ -1,16 +1,22 @@
-
 """
-LogiCycle - EXIF timestamp verification.
+LogiCycle — EXIF timestamp verification.
 
-Checks whether an uploaded photo contains a capture timestamp
-and whether that timestamp is close to when the server received it.
+Two questions this answers:
+    1. Does this photo have an EXIF capture timestamp at all?
+    2. If yes, is that capture time within 5 minutes of arrival at the server?
 
-Photos without EXIF data or with suspicious timestamps are sent
-for manual review instead of being automatically rejected.
+If (1) is False: we mark PENDING_REVIEW, not REJECTED.
+    - Old Android phones often strip EXIF.
+    - Punishing citizens for their phone isn't climate action.
+
+If (2) is False: suspicious — could be a re-upload of an old photo.
+    - Still marked PENDING_REVIEW (admin can eyeball it).
+
+Only (1) is True AND (2) is True = VERIFIED.
 """
 
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import EXIF_TIMESTAMP_BUFFER_SECONDS
 from PIL import ExifTags, Image
@@ -18,55 +24,51 @@ from PIL import ExifTags, Image
 
 def _extract_exif_datetime(image_bytes: bytes):
     """
-    Extract the original capture time from an image.
-
-    Returns None if the timestamp is missing or the image cannot be read.
+    Return naive datetime from EXIF DateTimeOriginal if present, else None.
+    Never raises — a corrupt image returns None.
     """
     try:
         img = Image.open(io.BytesIO(image_bytes))
         exif = img.getexif()
-
         if not exif:
             return None
 
-        # Check the original capture time, then fall back to the general timestamp.
+        # DateTimeOriginal lives in the Exif sub-IFD, not the top-level Exif IFD
         exif_ifd = exif.get_ifd(ExifTags.IFD.Exif)
-
-        raw = (
-            exif_ifd.get(ExifTags.Base.DateTimeOriginal)
-            or exif.get(ExifTags.Base.DateTime)
-        )
+        raw = exif_ifd.get(ExifTags.Base.DateTimeOriginal) \
+              or exif.get(ExifTags.Base.DateTime)
 
         if not raw:
             return None
 
         return datetime.strptime(raw, "%Y:%m:%d %H:%M:%S")
 
-    except (OSError, ValueError, TypeError, SyntaxError):
-        # Ignore images that cannot be read or have invalid metadata.
+    except Exception:
         return None
 
 
 def verify_image(image_bytes: bytes, arrival_timestamp: datetime) -> dict:
     """
-    Compare the photo's capture time with its server arrival time.
+    Verify whether a photo's EXIF capture time matches server arrival.
 
-    Returns the verification result, reason and time difference.
+    Returns:
+        {
+            "verified": bool,
+            "reason": str,
+            "delta_seconds": int | None,
+            "exif_timestamp": ISO str | None,
+            "arrival_timestamp": ISO str
+        }
     """
-
-    # Use the current UTC time if no arrival timestamp was provided.
+    # Normalize arrival to naive UTC datetime
     if arrival_timestamp is None:
-        arrival_timestamp = datetime.now(datetime.UTC)
+        arrival_timestamp = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    # Convert the arrival time to UTC before comparing timestamps.
-    if arrival_timestamp.tzinfo is None:
-        arrival_timestamp = arrival_timestamp.replace(tzinfo=datetime.UTC)
-    else:
-        arrival_timestamp = arrival_timestamp.astimezone(datetime.UTC)
+    if arrival_timestamp.tzinfo is not None:
+        arrival_timestamp = arrival_timestamp.astimezone(timezone.utc).replace(tzinfo=None)
 
     exif_dt = _extract_exif_datetime(image_bytes)
 
-    # Without a capture timestamp, the photo needs manual review.
     if exif_dt is None:
         return {
             "verified": False,
@@ -76,15 +78,7 @@ def verify_image(image_bytes: bytes, arrival_timestamp: datetime) -> dict:
             "arrival_timestamp": arrival_timestamp.isoformat(),
         }
 
-    # EXIF timestamps have no timezone information, so this implementation
-    # assumes the camera's recorded time is UTC.
-    exif_dt = exif_dt.replace(tzinfo=datetime.UTC)
-
-    # Calculate the difference between capture time and arrival time.
-    delta_seconds = int(
-        abs((arrival_timestamp - exif_dt).total_seconds())
-    )
-
+    delta_seconds = int(abs((arrival_timestamp - exif_dt).total_seconds()))
     verified = delta_seconds <= EXIF_TIMESTAMP_BUFFER_SECONDS
 
     return {
