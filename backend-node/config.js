@@ -20,5 +20,5 @@ export const CONFIG = {
     ? process.env.CORS_ORIGINS.split(",")
     : ["http://localhost:5173", "http://127.0.0.1:5173"],
   SERVICE_NAME: "logicycle-gateway",
-  SERVICE_VERSION: "0.2.0-phase2",
+  SERVICE_VERSION: "0.3.0-phase3",
 };

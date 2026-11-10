@@ -2,16 +2,9 @@
 LogiCycle — Priority Score algorithm.
 
 Pure functions, no side effects, no Flask imports.
-Importable from app.py, and testable from a plain Python REPL.
-
-Usage:
-    from scoring import calculate_priority_score
-    result = calculate_priority_score("mattress", "market")
-    # -> {"priority_score": 9, "material_weight": 3, "density_weight": 3,
-    #     "risk_tier": "CRITICAL"}
 """
 
-from config import MATERIAL_WEIGHTS, DENSITY_WEIGHTS, RISK_TIER_THRESHOLDS
+from config import DENSITY_WEIGHTS, MATERIAL_WEIGHTS, RISK_TIER_THRESHOLDS
 
 
 def _normalize(value: str) -> str:
@@ -26,9 +19,7 @@ def calculate_priority_score(material: str, density: str) -> dict:
     Formula:
         priority_score = material_weight × density_weight
 
-    Unknown inputs default to weight=1 (lowest), so a typo or novel
-    material never crashes the server — it just ranks low until
-    we add it to config.py.
+    Unknown inputs default to weight=1.
     """
     mat_key = _normalize(material)
     den_key = _normalize(density)

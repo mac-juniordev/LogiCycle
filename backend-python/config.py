@@ -54,4 +54,34 @@ EXIF_TIMESTAMP_BUFFER_SECONDS = 5 * 60  # 5 minutes
 # ---------------------------------------------------------------------------
 DEFAULT_PORT = 5001
 SERVICE_NAME = "logicycle-priority-engine"
-SERVICE_VERSION = "0.1.0-phase1"
+SERVICE_VERSION = "0.3.0-phase3"
+
+# ---------------------------------------------------------------------------
+# Bamenda zones — the source of truth for region → density mapping
+# ---------------------------------------------------------------------------
+# The frontend shows these 10 zones. When a citizen picks a zone, we look up
+# its density automatically and feed it to the scoring engine.
+BAMENDA_ZONES = {
+    # Markets — highest foot traffic, blocked drains affect the most people
+    "Nkwen Food Market": "market",
+    "Ntarikon Market": "market",
+
+    # Main roads — commercial arteries, flooding cuts off the city
+    "Mile 4 Nkwen": "main_road",
+    "Commercial Avenue": "main_road",
+    "Nkwen Highway": "main_road",
+
+    # Residential zones — protect homes
+    "Mankon": "residential",
+    "Up Station": "residential",
+    "Old Town": "residential",
+    "Bayelle": "residential",
+
+    # Tracks / footpaths — lowest flood impact, but still worth cleaning
+    "Mbatu Road": "tracks",
+}
+
+
+def density_for_zone(zone_name: str) -> str:
+    """Look up the density classification for a Bamenda zone. Defaults to 'tracks' if unknown."""
+    return BAMENDA_ZONES.get(zone_name, "tracks")

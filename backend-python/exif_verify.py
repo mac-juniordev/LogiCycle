@@ -33,10 +33,10 @@ def _extract_exif_datetime(image_bytes: bytes):
         if not exif:
             return None
 
-        # DateTimeOriginal lives in the Exif sub-IFD, not the top-level Exif IFD
         exif_ifd = exif.get_ifd(ExifTags.IFD.Exif)
-        raw = exif_ifd.get(ExifTags.Base.DateTimeOriginal) \
-              or exif.get(ExifTags.Base.DateTime)
+        raw = exif_ifd.get(ExifTags.Base.DateTimeOriginal) or exif.get(
+            ExifTags.Base.DateTime
+        )
 
         if not raw:
             return None
@@ -50,15 +50,6 @@ def _extract_exif_datetime(image_bytes: bytes):
 def verify_image(image_bytes: bytes, arrival_timestamp: datetime) -> dict:
     """
     Verify whether a photo's EXIF capture time matches server arrival.
-
-    Returns:
-        {
-            "verified": bool,
-            "reason": str,
-            "delta_seconds": int | None,
-            "exif_timestamp": ISO str | None,
-            "arrival_timestamp": ISO str
-        }
     """
     # Normalize arrival to naive UTC datetime
     if arrival_timestamp is None:

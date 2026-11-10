@@ -1,5 +1,6 @@
 /**
  * LogiCycle Gateway — Express Server
+ * Bamenda-first anonymous report intake with zone-derived density.
  */
 
 import express from "express";
@@ -48,7 +49,7 @@ app.get("/health", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/reports — public anonymous intake
+// POST /api/reports — public anonymous intake (Bamenda-first: zone required)
 // ---------------------------------------------------------------------------
 app.post("/api/reports", upload.single("photo"), async (req, res) => {
   try {
@@ -57,22 +58,21 @@ app.post("/api/reports", upload.single("photo"), async (req, res) => {
       (s || "").replace(/[\uFFFD\u00EF\u00BF\u00BD]/g, "").replace(/\s+/g, " ").trim();
 
     const material = sanitize(req.body.material);
-    const density = sanitize(req.body.density);
-    const region = sanitize(req.body.region);
+    const zone = sanitize(req.body.zone);
     const notes = sanitize(req.body.notes);
     const arrival_timestamp = req.body.arrival_timestamp;
 
-    if (!material || !density || !region) {
+    if (!material || !zone) {
       return res.status(400).json({
         error: "missing_required_fields",
-        required: ["material", "density", "region"],
+        required: ["material", "zone"],
       });
     }
 
     const arrival = arrival_timestamp || new Date().toISOString();
 
-    // 1) Score: material × density — calls Python engine
-    const score = await scoreReport(material, density);
+    // 1) Score: material × zone — Python derives density from zone
+    const score = await scoreReport(material, zone, true);
 
     // 2) EXIF verification — only if a photo was uploaded
     let verification = {
@@ -90,12 +90,12 @@ app.post("/api/reports", upload.single("photo"), async (req, res) => {
       );
     }
 
-    // 3) Build the report object
+    // 3) Build the report
     const report = {
       id: `LC-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`,
       material,
-      density,
-      region,
+      zone,
+      density: score.density || "tracks",
       notes: notes || "",
       arrival_timestamp: arrival,
       exif_verification: verification,
@@ -105,7 +105,6 @@ app.post("/api/reports", upload.single("photo"), async (req, res) => {
       created_at: new Date().toISOString(),
     };
 
-    // If Python scoring failed, expose it (diagnostic)
     if (score.error) {
       report.scoring_error = score.error;
     }
@@ -149,7 +148,7 @@ app.post("/api/dispatch/route", (req, res) => {
   const route = verified.map((r, idx) => ({
     stop: idx + 1,
     report_id: r.id,
-    region: r.region,
+    zone: r.zone,
     material: r.material,
     density: r.density,
     priority_score: r.priority_score,
@@ -165,7 +164,7 @@ app.post("/api/dispatch/route", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/dispatch/active — dispatcher polls for active route
+// GET /api/dispatch/active — dispatcher polls
 // ---------------------------------------------------------------------------
 app.get("/api/dispatch/active", (req, res) => {
   res.json(getActiveRoute());
@@ -192,7 +191,7 @@ app.post("/api/dispatch/acknowledge", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 404 fallback
+// 404
 // ---------------------------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ error: "not_found", path: req.path });

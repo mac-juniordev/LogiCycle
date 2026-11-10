@@ -1,5 +1,7 @@
 /**
  * LogiCycle Gateway — Python engine client
+ * Wraps calls to the Flask service. If Python is unreachable, we return
+ * a safe default rather than crashing the whole request.
  */
 
 import fetch from "node-fetch";
@@ -8,17 +10,28 @@ import { CONFIG } from "./config.js";
 function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CONFIG.PY_TIMEOUT_MS);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+    clearTimeout(timer)
+  );
 }
 
-export async function scoreReport(material, density) {
+// ---------------------------------------------------------------------------
+// Score: accepts either {material, density} or {material, zone}
+// ---------------------------------------------------------------------------
+export async function scoreReport(material, densityOrZone, isZone = false) {
+  const payload = isZone
+    ? { material, zone: densityOrZone }
+    : { material, density: densityOrZone };
+
   try {
     const res = await fetchWithTimeout(`${CONFIG.PY_ENGINE_URL}/score`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ material, density }),
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Python /score returned ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Python /score returned ${res.status}`);
+    }
     return await res.json();
   } catch (err) {
     console.error("[pythonClient] scoreReport failed:", err.message);
@@ -32,6 +45,9 @@ export async function scoreReport(material, density) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Verify image: EXIF timestamp vs arrival
+// ---------------------------------------------------------------------------
 export async function verifyImage(buffer, mimetype, filename, arrivalTimestamp) {
   try {
     const fd = new FormData();
@@ -43,7 +59,9 @@ export async function verifyImage(buffer, mimetype, filename, arrivalTimestamp) 
       method: "POST",
       body: fd,
     });
-    if (!res.ok) throw new Error(`Python /verify-image returned ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Python /verify-image returned ${res.status}`);
+    }
     return await res.json();
   } catch (err) {
     console.error("[pythonClient] verifyImage failed:", err.message);
