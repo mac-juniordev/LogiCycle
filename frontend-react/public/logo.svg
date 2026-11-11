@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" aria-label="LogiCycle logo">
+  <!-- Circular background -->
+  <circle cx="256" cy="256" r="256" fill="#051F15"/>
+
+  <!-- Drain grate: outer rounded square frame -->
+  <rect x="106" y="106" width="300" height="300" rx="24" fill="none" stroke="#1E8B60" stroke-width="14"/>
+
+  <!-- Drain grate: 5 vertical slots -->
+  <line x1="152" y1="140" x2="152" y2="372" stroke="#64748B" stroke-width="10" stroke-linecap="round"/>
+  <line x1="204" y1="140" x2="204" y2="372" stroke="#64748B" stroke-width="10" stroke-linecap="round"/>
+  <line x1="308" y1="140" x2="308" y2="372" stroke="#64748B" stroke-width="10" stroke-linecap="round"/>
+  <line x1="360" y1="140" x2="360" y2="372" stroke="#64748B" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Leaf growing through middle slot -->
+  <path
+    d="M 256 380
+       C 240 340, 226 300, 232 260
+       C 236 232, 244 210, 256 188
+       C 268 210, 276 232, 280 260
+       C 286 300, 272 340, 256 380 Z"
+    fill="#2AB077"
+  />
+
+  <!-- Leaf stem -->
+  <line x1="256" y1="380" x2="256" y2="300" stroke="#114B37" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Leaf central vein -->
+  <line x1="256" y1="300" x2="256" y2="210" stroke="#114B37" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Amber hazard dot (top-right, inside circle but outside grate) -->
+  <circle cx="396" cy="128" r="16" fill="#F59E0B"/>
+  <circle cx="396" cy="128" r="16" fill="none" stroke="#051F15" stroke-width="3"/>
+</svg>

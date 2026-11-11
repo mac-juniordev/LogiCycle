@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* ============================================================
+     PROFESSIONAL PALETTE — steel blue + forest + burnt amber
+     Base: near-black blue-slate (control room, not neon glow)
+     ============================================================ */
+
+  /* Base layers */
+  --color-base: #0a1219;
+  --color-surface: #121e2b;
+  --color-surface-hover: #1a2836;
+  --color-border: #1e2d3d;
+  --color-border-strong: #2a3d50;
+
+  /* Steel blue — primary accent (buttons, links, focus) */
+  --color-steel-900: #163a5c;
+  --color-steel-800: #1a4870;
+  --color-steel-700: #1e5f8f;
+  --color-steel-600: #256fa5;
+  --color-steel-500: #3b82b8;
+  --color-steel-400: #6ba8d4;
+
+  /* Forest — secondary accent (logo, verified, "solved") */
+  --color-forest-700: #166b4b;
+  --color-forest-600: #1e8b60;
+  --color-forest-500: #2ab077;
+  --color-forest-400: #34d399;
+
+  /* Hazard — burnt amber (alerts, CRITICAL tier) */
+  --color-hazard-amber: #e07a1f;
+  --color-hazard-amber-bright: #f2a245;
+
+  /* Danger — brick red (errors, PENDING_REVIEW) */
+  --color-danger: #c9302c;
+  --color-danger-bright: #e04440;
+
+  /* Text */
+  --color-cream: #e8e4dc;
+  --color-cream-muted: #7a8b9c;
+  --color-cream-dim: #55606d;
+
+  /* Typography */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #0a1219;
+  color: #e8e4dc;
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: #1e5f8f;
+  color: #e8e4dc;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a1219;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2d3d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1e5f8f;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.text-hero {
+  text-shadow: 0 1px 3px rgba(10, 18, 25, 0.6);
+}
